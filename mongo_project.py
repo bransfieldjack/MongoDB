@@ -1,9 +1,11 @@
 import pymongo #Imports the Pymongo Library
 import os
 
+
 MONGODB_URI=os.getenv("MONGO_URI")
 DBS_NAME="mytestdb"
 COLLECTION_NAME="myFirstMDB"
+
 
 def mongo_connect(url):
     try:
@@ -11,6 +13,7 @@ def mongo_connect(url):
         return conn
     except pymongo.errors.ConnectionFailure as e:
         print("Could not connect to Mongo DB. %s") % e
+        
         
 def show_menu():
     print("")
@@ -22,6 +25,7 @@ def show_menu():
     
     option = input("Enter Option: ")
     return option
+    
     
 def get_record():
     print(" ")
@@ -38,6 +42,7 @@ def get_record():
         print("Error, no results found! ")
         
     return doc
+
 
 def add_record():
     print(" ")
@@ -58,17 +63,71 @@ def add_record():
     except:
         print("Error accessing the database. ")
     
+    
+def find_record():
+    doc = get_record()
+    if doc:
+        print(" ")
+        for k,v in doc.items():
+            if k != "_id:":
+                print(k.capitalize() + ": " + v.capitalize())
+    
+    
+def edit_record():
+    doc = get_record()
+    if doc:
+        update_doc = {}
+        print(" ")
+        for k,v in doc.items():
+            if k != "_id:":
+                update_doc[k] = input(k.capitalize() + " [" + v + "] : ")
+                
+                if update_doc[k] == " ":
+                    update_doc[k] = v
+                    
+        try: 
+            coll.update_one(doc, {"$set": update_doc})
+            print("")
+            print("Document updated. ")
+        except: 
+            print("Error accessing the database. ")
+            
+            
+def delete_record():
+    
+    doc = get_record()
+    
+    if doc:
+        print(" ")
+        for k,v in doc.items():
+            if k != "_id":
+                print(k.capitalize() + ": " + v.capitalize())
+                
+        print(" ")
+        confirmation = input("Is this the document you want to delete? \n Y/N")
+        print(" ")
+        
+        if confirmation.lower() == "y":
+            try:
+                coll.remove(doc)
+                print("Document deleted. ")
+            except:
+                print("Error accessing the database. ")
+        else:
+            print("Document not deleted. ")
+            
+    
 def main_loop():
     while True:
         option = show_menu()
         if option == "1":
             add_record()
         elif option == "2":
-            print("You have selected option 2.")
+            find_record()
         elif option == "3":
-            print("You have selected option 3.")
+            edit_record()
         elif option == "4":
-            print("You have selected option 4.")
+            delete_record()
         elif option == "5":
             print("You have selected option 5.")
             conn.close()
@@ -77,7 +136,9 @@ def main_loop():
             print("Invalid option.")
             print("")
             
+            
 conn = mongo_connect(MONGODB_URI)
 coll = conn[DBS_NAME][COLLECTION_NAME]
+
 
 main_loop() 
